@@ -74,6 +74,11 @@ void Error_Handler(void);
 #define LCD_D6_GPIO_Port GPIOA
 #define LCD_D7_Pin GPIO_PIN_7
 #define LCD_D7_GPIO_Port GPIOA
+#define VOL_B_INTERRUPT_Pin GPIO_PIN_9
+#define VOL_B_INTERRUPT_GPIO_Port GPIOA
+#define VOL_B_INTERRUPT_EXTI_IRQn EXTI9_5_IRQn
+#define VOL_A_READ_Pin GPIO_PIN_10
+#define VOL_A_READ_GPIO_Port GPIOA
 #define T_SWDIO_Pin GPIO_PIN_13
 #define T_SWDIO_GPIO_Port GPIOA
 #define T_SWCLK_Pin GPIO_PIN_14

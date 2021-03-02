@@ -53,6 +53,13 @@ const osThreadAttr_t mainTask_attributes = {
   .priority = (osPriority_t) osPriorityNormal,
   .stack_size = 128 * 4
 };
+/* Definitions for InterfaceTask */
+osThreadId_t InterfaceTaskHandle;
+const osThreadAttr_t InterfaceTask_attributes = {
+  .name = "InterfaceTask",
+  .priority = (osPriority_t) osPriorityLow,
+  .stack_size = 128 * 4
+};
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -63,6 +70,7 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM6_Init(void);
 void StartMainTask(void *argument);
+void StartInterfaceTask(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -129,6 +137,9 @@ int main(void)
   /* Create the thread(s) */
   /* creation of mainTask */
   mainTaskHandle = osThreadNew(StartMainTask, NULL, &mainTask_attributes);
+
+  /* creation of InterfaceTask */
+  InterfaceTaskHandle = osThreadNew(StartInterfaceTask, NULL, &InterfaceTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -321,17 +332,17 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PA9 */
-  GPIO_InitStruct.Pin = GPIO_PIN_9;
+  /*Configure GPIO pin : VOL_B_INTERRUPT_Pin */
+  GPIO_InitStruct.Pin = VOL_B_INTERRUPT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(VOL_B_INTERRUPT_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PA10 */
-  GPIO_InitStruct.Pin = GPIO_PIN_10;
+  /*Configure GPIO pin : VOL_A_READ_Pin */
+  GPIO_InitStruct.Pin = VOL_A_READ_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(VOL_A_READ_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : LD2_Pin */
   GPIO_InitStruct.Pin = LD2_Pin;
@@ -347,13 +358,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-	if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10) == 1)
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, 1);
-	else
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, 0);
-}
+
 
 /* USER CODE END 4 */
 
@@ -374,6 +379,24 @@ void StartMainTask(void *argument)
 		tick_app();
 	}
   /* USER CODE END 5 */
+}
+
+/* USER CODE BEGIN Header_StartInterfaceTask */
+/**
+* @brief Function implementing the InterfaceTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartInterfaceTask */
+void StartInterfaceTask(void *argument)
+{
+  /* USER CODE BEGIN StartInterfaceTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartInterfaceTask */
 }
 
 /**

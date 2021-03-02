@@ -9,7 +9,7 @@
 #include "main.h"
 #include "cmsis_os.h"
 
-int iterate = 0;
+int volume = 0;
 
 /* Execute all configuration protocols */
 void init_app()
@@ -19,15 +19,27 @@ void init_app()
 
 void tick_app()
 {
-	osDelay(750);
+	osDelay(30);
 	lcd_clear();
-	iterate++;
-	if(iterate%2 == 0){
-		lcd_put_cur(0, 0);
-		lcd_send_string("Hello");
+	char vol[] = "                "; // 16 spaces
+	for(int i=0;i<16;i++)
+	{
+		if(i * 20 < volume * 16 ) vol[i] = '\xff';
 	}
-	else {
-		lcd_put_cur(1, 0);
-		lcd_send_string("World");
+	lcd_send_string(vol);
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10) == 1)
+	{
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, 1);
+		if(volume < 20) volume++;
 	}
+	else
+	{
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, 0);
+		if(volume > 0) volume--;
+	}
+
 }
