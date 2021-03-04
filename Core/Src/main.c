@@ -23,8 +23,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "AppMain.h"
-
+#include "appmain.h"
+#include "interface.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -318,15 +318,15 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, LCD_RS_Pin|LCD_E_Pin|LCD_D4_Pin|LCD_D5_Pin
-                          |LCD_D6_Pin|LCD_D7_Pin|GPIO_PIN_12, GPIO_PIN_RESET);
+                          |LCD_D6_Pin|LCD_D7_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : LCD_RS_Pin LCD_E_Pin LCD_D4_Pin LCD_D5_Pin
-                           LCD_D6_Pin LCD_D7_Pin PA12 */
+                           LCD_D6_Pin LCD_D7_Pin */
   GPIO_InitStruct.Pin = LCD_RS_Pin|LCD_E_Pin|LCD_D4_Pin|LCD_D5_Pin
-                          |LCD_D6_Pin|LCD_D7_Pin|GPIO_PIN_12;
+                          |LCD_D6_Pin|LCD_D7_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -334,7 +334,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : VOL_B_INTERRUPT_Pin */
   GPIO_InitStruct.Pin = VOL_B_INTERRUPT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(VOL_B_INTERRUPT_GPIO_Port, &GPIO_InitStruct);
 
@@ -358,7 +358,10 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	interrupt_interface(GPIO_Pin);
+}
 
 /* USER CODE END 4 */
 
@@ -391,11 +394,12 @@ void StartMainTask(void *argument)
 void StartInterfaceTask(void *argument)
 {
   /* USER CODE BEGIN StartInterfaceTask */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
+	init_interface();
+	for(uint32_t frame = 0;1;frame++)
+	{
+		osDelay(33); // Interface will update at 30FPS
+		tick_interface(frame);
+	}
   /* USER CODE END StartInterfaceTask */
 }
 

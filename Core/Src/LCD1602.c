@@ -11,6 +11,7 @@
 #include "stm32g4xx_hal.h"
 #include "cmsis_os.h"
 
+
 /*********** Define the LCD PINS below ****************/
 
 #define RS_Pin GPIO_PIN_0
