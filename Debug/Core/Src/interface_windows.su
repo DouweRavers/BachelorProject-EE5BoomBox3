@@ -1,0 +1,4 @@
+interface_windows.c:12:7:firstVolume	4	static
+interface_windows.c:13:7:secondVolume	16	static
+interface_windows.c:21:17:windowAtVolume	16	static
+interface_windows.c:29:17:windowAtStart	16	static

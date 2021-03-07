@@ -1,0 +1,6 @@
+interface_screens.c:16:7:firstVolume	16	static
+interface_screens.c:18:7:secondVolume	24	static
+interface_screens.c:27:17:windowAtVolume	16	static
+interface_screens.c:33:7:firstStart	16	static
+interface_screens.c:34:7:secondStart	16	static
+interface_screens.c:35:17:windowAtStart	16	static

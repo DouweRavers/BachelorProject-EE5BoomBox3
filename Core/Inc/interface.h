@@ -7,12 +7,14 @@
 
 #ifndef INC_INTERFACE_H_
 #define INC_INTERFACE_H_
-#include "main.h"
-#include "LCD1602.h"
 
+#include "main.h"
+
+uint8_t volume_level;
 // public functions
 void init_interface(); // set-up user interface
 void tick_interface(uint32_t frame); // inf-loop of user interface
 void interrupt_interface(uint16_t GPIO_Pin);
+
 
 #endif /* INC_INTERFACE_H_ */
