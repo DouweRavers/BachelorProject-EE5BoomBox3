@@ -8,20 +8,23 @@
 #include "interface.h"
 
 struct screen screens[2] = {
-		{ VolumeScreen, &firstVolume, &secondVolume, &windowAtVolume },
-		{ StartScreen, &firstStart, &secondStart, &windowAtStart }
+		{ VolumeScreen, &getScreenOutputVolume, &windowAtVolume },
+		{ StartScreen, &getScreenOutputStart, &windowAtStart }
 };
 
 // Volume screen
-char* firstVolume(uint32_t frame){ return "     Volume"; }
-
-char* secondVolume(uint32_t frame){
-	char* vol = "                "; // 16 spaces
+void getScreenOutputVolume(uint32_t frame, char * first, char * second)
+{
+	char r_first[] = "     Volume";
+	char r_second[17];
 	for(int i=0;i<16;i++)
 	{
-		if(i * 20 < volume_level * 16 ) vol[i] = '\xff';
+		if(i * 20 < volume_level * 16 ) r_second[i] = '\xff';
+		else r_second[i] = '_';
 	}
-	return vol;
+	r_second[16] = '\0';
+	strncpy(first, r_first, 16);
+	strncpy(second, r_second, 16);
 }
 
 enum screentype windowAtVolume(enum direction dir){
@@ -30,8 +33,14 @@ enum screentype windowAtVolume(enum direction dir){
 }
 
 // Start screen
-char* firstStart(uint32_t frame){ return "    MainMenu"; }
-char* secondStart(uint32_t frame){ return " In development"; }
+void getScreenOutputStart(uint32_t frame, char * first, char * second)
+{
+	char r_first[] = "    MainMenu";
+	char r_second[] = " In development";
+	strncpy(first, r_first, 16);
+	strncpy(second, r_second, 16);
+}
+
 enum screentype windowAtStart(enum direction dir){
 	return VolumeScreen;
 }
