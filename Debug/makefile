@@ -58,8 +58,8 @@ all: main-build
 main-build: EE5BoomBox3.elf secondary-outputs
 
 # Tool invocations
-EE5BoomBox3.elf: $(OBJS) $(USER_OBJS) /home/douwe/STM32CubeIDE/workspace_1.5.1/EE5BoomBox3/STM32G431KBTX_FLASH.ld
-	arm-none-eabi-gcc -o "EE5BoomBox3.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/douwe/STM32CubeIDE/workspace_1.5.1/EE5BoomBox3/STM32G431KBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="EE5BoomBox3.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+EE5BoomBox3.elf: $(OBJS) $(USER_OBJS) /home/arne/STM32CubeIDE/workspace_1.5.1/EE5BoomBox3/STM32G431KBTX_FLASH.ld
+	arm-none-eabi-gcc -o "EE5BoomBox3.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/arne/STM32CubeIDE/workspace_1.5.1/EE5BoomBox3/STM32G431KBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="EE5BoomBox3.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
