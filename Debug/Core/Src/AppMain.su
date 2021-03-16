@@ -1,0 +1,2 @@
+AppMain.c:15:6:init_app	8	static
+AppMain.c:20:6:tick_app	8	static
