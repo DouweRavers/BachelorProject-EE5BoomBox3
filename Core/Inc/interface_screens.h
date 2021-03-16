@@ -16,21 +16,17 @@ enum screentype{ // different screen types
 };
 struct screen { // A struct that contains screen behavior
 	enum screentype type; // which screen type is it (same as location in array)
-	char* (*GetFirstLine)(uint32_t frame); // string to first line LCD (frame used for animation)
-	char* (*GetSecondLine)(uint32_t frame); // string to second line LCD (frame used for animation)
+	void (*GetScreenOutput)(uint32_t frame, char * first, char * second); // string to display on LCD (first is first line, second is second line) (frame used for animation)
 	enum screentype (*GetWindowAt)(enum direction dir); // control button behavior
 };
 struct screen screens[2]; // an array with all the screen configurations
 
 // volume screen
-char* firstVolume(uint32_t frame);
-char* secondVolume(uint32_t frame);
+void getScreenOutputVolume(uint32_t frame, char * first, char * second);
 enum screentype windowAtVolume(enum direction dir);
 // start screen
-char* firstStart(uint32_t frame);
-char* secondStart(uint32_t frame);
+void getScreenOutputStart(uint32_t frame, char * first, char * second);
 enum screentype windowAtStart(enum direction dir);
-
 
 
 #endif /* INC_INTERFACE_SCREENS_H_ */

@@ -1,9 +1,0 @@
-interface.c:35:6:init_interface	8	static
-interface.c:40:6:tick_interface	16	static
-interface.c:50:6:interrupt_interface	16	static
-interface.c:63:6:interrupt_adc_interface	16	static
-interface.c:72:7:buttons_controller	24	static
-interface.c:102:6:interface_update	16	static
-interface.c:108:6:screen_update	16	static
-interface.c:125:6:buttons_update	16	static
-interface.c:131:6:volume_update	16	static

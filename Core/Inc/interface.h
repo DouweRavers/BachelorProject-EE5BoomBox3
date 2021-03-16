@@ -10,7 +10,8 @@
 
 #include "main.h"
 
-uint8_t volume_level;
+extern uint8_t volume_level;
+
 // public functions
 void init_interface(); // set-up user interface
 void tick_interface(uint32_t frame); // inf-loop of user interface
