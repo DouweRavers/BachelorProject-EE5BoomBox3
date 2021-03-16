@@ -28,6 +28,6 @@ void tick_app()
 	}
 	else {
 		lcd_put_cur(1, 0);
-		lcd_send_string("World");
+		lcd_send_string("kitty");
 	}
 }
