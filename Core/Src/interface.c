@@ -21,11 +21,16 @@ int volume_delta = 0; // volume wheel went up/down
 bool screen_updated = true; // indicator of when to rewrite screen output
 enum screentype previous_screen = StartScreen, current_screen = StartScreen; // keep track of the current and previous screen
 uint32_t screen_start_time = 0;
+uint32_t value_adc;
+unsigned char button;
 
 // private functions declaration
 void interface_update(uint32_t frame);
 void screen_update(uint32_t frame);
 void volume_update(uint32_t frame);
+void buttons_update(unsigned  char frame);
+void buttons_controller( uint32_t value);
+
 
 // public functions
 void init_interface()
@@ -42,17 +47,58 @@ void tick_interface(uint32_t frame)
 }
 
 
-void interrupt_interface(uint16_t GPIO_Pin)
+void interrupt_interface(uint16_t GPIO_Pin , ADC_HandleTypeDef *hadc1)
 {
 	if(GPIO_Pin == GPIO_PIN_9)
 	{
 		if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10) == 1) volume_delta++;
 		else volume_delta--;
 	}
+
+	if(GPIO_Pin == GPIO_PIN_8){
+		HAL_ADC_Start_IT(hadc1);
+	}
+}
+
+void interrupt_adc_interface(ADC_HandleTypeDef *hadc){
+	    value_adc = HAL_ADC_GetValue(hadc);
+	    buttons_controller ( value_adc);
+	    HAL_ADC_Stop_IT(hadc);
+
 }
 
 
 // private functions
+ void buttons_controller( uint32_t value){
+
+	unsigned char button = NO_SELECTION;
+	// I use a marge of +- 100
+	if(value <= 100 ){
+		button = NO_SELECTION;
+
+	}
+	else if ( value >= 1781 && value <= 1981){
+		button = SELECT;
+	}
+	else if ( value >= 2109 && value <= 2309){
+		button = UP;
+	}
+
+	else if (value >=  2432 && value <= 2632){
+		button = RIGHT;
+	}
+
+	else if (value >= 2953 && value <= 3153){
+		button= DOWN;
+	}
+	else if ( value >= 3700){
+		button =  LEFT;
+	}
+
+	if(button != NO_SELECTION) buttons_update(button);
+
+}
+
 void interface_update(uint32_t frame)
 {
 
@@ -76,6 +122,11 @@ void screen_update(uint32_t frame)
 		lcd_send_string(second);
 		screen_updated = false;
 	}
+}
+
+void buttons_update(unsigned char button)
+{
+	screen_updated = true;
 }
 
 // Volume wheel driver. Handles input of volume wheel.

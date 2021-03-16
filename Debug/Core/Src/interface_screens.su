@@ -1,4 +1,0 @@
-interface_screens.c:16:6:getScreenOutputVolume	64	static
-interface_screens.c:30:17:windowAtVolume	16	static
-interface_screens.c:36:6:getScreenOutputStart	64	static
-interface_screens.c:44:17:windowAtStart	16	static
