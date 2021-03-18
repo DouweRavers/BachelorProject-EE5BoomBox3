@@ -17,19 +17,27 @@
 uint8_t volume_level = 0; // between 0 - 20
 
 // private variables
+//	volume control
 int volume_delta = 0; // volume wheel went up/down
+//	screen control
 bool screen_updated = true; // indicator of when to rewrite screen output
 enum screentype previous_screen = StartScreen, current_screen = StartScreen; // keep track of the current and previous screen
-uint32_t screen_start_time = 0;
+uint16_t popup_timer = 0;
+// button control
 uint32_t value_adc;
-unsigned char button;
+enum direction last_registered_button = NoSelection;
 
 // private functions declaration
-void interface_update(uint32_t frame);
-void screen_update(uint32_t frame);
-void volume_update(uint32_t frame);
-void buttons_update(unsigned  char frame);
-void buttons_controller( uint32_t value);
+//	separate driver methods
+void interface_update(uint32_t frame); // regulates the interface configurations
+void screen_update(uint32_t frame); // processes the LCD output
+void volume_update(uint32_t frame); // processes the volume input
+void buttons_update(uint32_t frame); // processes the button input
+//	interface control
+void pop_up(enum screentype popup, uint16_t popup_duration); // handles screens that only show for a short time in frames (30 = 1s)
+void set_screen(enum screentype screen); // toggle between menu screens
+//	button control
+void buttons_controller(uint32_t value);
 
 
 // public functions
@@ -40,9 +48,10 @@ void init_interface()
 
 void tick_interface(uint32_t frame)
 {
-	// at 30Hz the uint of frame will loop back after 100 years
+	// at 30Hz the uint32 of frame will loop back after 100 years
 	interface_update(frame);
 	volume_update(frame);
+	buttons_update(frame);
 	screen_update(frame);
 }
 
@@ -67,51 +76,19 @@ void interrupt_adc_interface(ADC_HandleTypeDef *hadc){
 
 }
 
-
-// private functions
- void buttons_controller( uint32_t value){
-
-	unsigned char button = NO_SELECTION;
-	// I use a marge of +- 100
-	if(value <= 100 ){
-		button = NO_SELECTION;
-
-	}
-	else if ( value >= 1781 && value <= 1981){
-		button = SELECT;
-	}
-	else if ( value >= 2109 && value <= 2309){
-		button = UP;
-	}
-
-	else if (value >=  2432 && value <= 2632){
-		button = RIGHT;
-	}
-
-	else if (value >= 2953 && value <= 3153){
-		button= DOWN;
-	}
-	else if ( value >= 3700){
-		button =  LEFT;
-	}
-
-	if(button != NO_SELECTION) buttons_update(button);
-
-}
-
+// implementation private functions
 void interface_update(uint32_t frame)
 {
-
-}
-
-
-void screen_update(uint32_t frame)
-{
-	if(current_screen == VolumeScreen && frame - screen_start_time > 60)
+	// check if popup has been shown for "popup_timer" seconds
+	if(screens[current_screen].popup && popup_timer == 0)
 	{
 		current_screen = previous_screen;
 		screen_updated = true;
-	}
+	} else popup_timer--;
+}
+
+void screen_update(uint32_t frame)
+{
 	if(screen_updated)
 	{
 		lcd_clear();
@@ -124,25 +101,61 @@ void screen_update(uint32_t frame)
 	}
 }
 
-void buttons_update(unsigned char button)
+void buttons_update(uint32_t frame)
 {
-	screen_updated = true;
+	if(last_registered_button != NoSelection){
+
+	}
 }
 
 // Volume wheel driver. Handles input of volume wheel.
 void volume_update(uint32_t frame)
 {
-	if(frame % 2 == 0) // prescaler (checks every 2 frames (15Hz))
-	{
-		if(volume_delta > 0 && volume_level < 20) { volume_level++; }
-		else if(volume_delta < 0 && volume_level > 0) { volume_level--; }
-		uint8_t debug = volume_level;
-		if(volume_delta != 0) {
-			volume_delta = 0;
-			screen_updated = true;
-			if(current_screen != VolumeScreen) previous_screen = current_screen;
-			current_screen = VolumeScreen;
-			screen_start_time = frame;
-		}
+	if(volume_delta > 0 && volume_level < 20) { volume_level++; }
+	else if(volume_delta < 0 && volume_level > 0) { volume_level--; }
+	if(volume_delta != 0) {
+		volume_delta = 0;
+		pop_up(VolumeScreen, 60);
 	}
+}
+
+// Button driver
+void buttons_controller( uint32_t value ){
+	enum direction button = NoSelection;
+	// I use a marge of +- 100
+	if(value <= 100 ){
+		button = NoSelection;
+	}
+	else if ( value >= 1781 && value <= 1981){
+		button = Enter;
+	}
+	else if ( value >= 2109 && value <= 2309){
+		button = Up;
+	}
+	else if (value >=  2432 && value <= 2632){
+		button = Right;
+	}
+	else if (value >= 2953 && value <= 3153){
+		button = Down;
+	}
+	else if ( value >= 3700){
+		button =  Left;
+	}
+	if(button != NoSelection) last_registered_button = button;
+
+}
+
+// Interface functions
+void pop_up(enum screentype screen, uint16_t popup_duration)
+{
+	screen_updated = true;
+	if(!screens[current_screen].popup) previous_screen = current_screen;
+	current_screen = screen;
+	popup_timer = popup_duration;
+}
+
+void set_screen(enum screentype screen)
+{
+	screen_updated = true;
+	current_screen = screen;
 }

@@ -6,11 +6,24 @@
  */
 #include "interface_screens.h"
 #include "interface.h"
+#include <string.h>
 
+
+// declarations
+
+// volume screen
+void getScreenOutputVolume(uint32_t frame, char * first, char * second);
+enum screentype windowAtVolume(enum direction dir);
+// start screen
+void getScreenOutputStart(uint32_t frame, char * first, char * second);
+enum screentype windowAtStart(enum direction dir);
+
+// screen array
 struct screen screens[2] = {
-		{ VolumeScreen, &getScreenOutputVolume, &windowAtVolume },
-		{ StartScreen, &getScreenOutputStart, &windowAtStart }
+		{ VolumeScreen, &getScreenOutputVolume, &windowAtVolume, true },
+		{ StartScreen, &getScreenOutputStart, &windowAtStart, false }
 };
+
 
 // Volume screen
 void getScreenOutputVolume(uint32_t frame, char * first, char * second)
