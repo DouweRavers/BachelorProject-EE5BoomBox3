@@ -13,10 +13,16 @@
 #include "interface.h"
 #include "interface_screens.h"
 
-// public variables
+/***************************
+ *	public variables
+ **************************/
+
 uint8_t volume_level = 0; // between 0 - 20
 
-// private variables
+/***************************
+ *	private variables
+ **************************/
+
 //	volume control
 int volume_delta = 0; // volume wheel went up/down
 //	screen control
@@ -27,7 +33,11 @@ uint16_t popup_timer = 0;
 uint32_t value_adc;
 enum direction last_registered_button = NoSelection;
 
-// private functions declaration
+
+/********************************
+ *	private function declaration
+ ********************************/
+
 //	separate driver methods
 void interface_update(uint32_t frame); // regulates the interface configurations
 void screen_update(uint32_t frame); // processes the LCD output
@@ -40,7 +50,9 @@ void set_screen(enum screentype screen); // toggle between menu screens
 void buttons_controller(uint32_t value);
 
 
-// public functions
+/***************************
+ *	public variables
+ **************************/
 void init_interface()
 {
 	lcd_init ();
@@ -76,7 +88,10 @@ void interrupt_adc_interface(ADC_HandleTypeDef *hadc){
 
 }
 
-// implementation private functions
+/***************************
+ *	private functions
+ **************************/
+
 void interface_update(uint32_t frame)
 {
 	// check if popup has been shown for "popup_timer" seconds
@@ -104,6 +119,7 @@ void screen_update(uint32_t frame)
 void buttons_update(uint32_t frame)
 {
 	if(last_registered_button != NoSelection){
+
 
 	}
 }
