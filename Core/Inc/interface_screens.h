@@ -8,7 +8,6 @@
 #ifndef INC_INTERFACE_SCREENS_H_
 #define INC_INTERFACE_SCREENS_H_
 
-#include <stdbool.h>
 #include "main.h"
 
 enum direction{  // button pressed
@@ -32,7 +31,7 @@ struct screen { // A struct that contains screen behavior
 	enum screentype type; // which screen type is it (same as location in array)
 	void (*GetScreenOutput)(uint32_t frame, char * first, char * second); // string to display on LCD (first is first line, second is second line) (frame used for animation)
 	struct buttonaction (*OnButtonPressed)(enum direction dir); // control button behavior
-	bool popup;
+	uint16_t popup_time;
 };
 
 struct screen screens[7]; // an array with all the screen configurations

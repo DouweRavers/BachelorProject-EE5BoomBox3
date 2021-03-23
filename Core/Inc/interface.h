@@ -8,9 +8,11 @@
 #ifndef INC_INTERFACE_H_
 #define INC_INTERFACE_H_
 
+#include <stdbool.h>
 #include "main.h"
 
 extern uint8_t volume_level;
+extern bool LED_enabled;
 
 // public functions
 void init_interface(); // set-up user interface
