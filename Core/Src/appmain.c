@@ -16,5 +16,4 @@ void init_app()
 
 void tick_app()
 {
-	osDelay(1000);
 }

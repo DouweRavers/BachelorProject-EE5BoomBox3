@@ -45,7 +45,6 @@ void interface_update(uint32_t frame); // regulates the interface configurations
 void screen_update(uint32_t frame); // processes the LCD output
 void volume_update(uint32_t frame); // processes the volume input
 //	interface control
-void pop_up(enum screentype popup, uint16_t popup_duration); // handles screens that only show for a short time in frames (30 = 1s)
 void set_screen(enum screentype screen); // toggle between menu screens
 //	button control
 void buttons_controller(uint32_t value);
@@ -110,6 +109,9 @@ void interface_update(uint32_t frame)
 				break;
 			case GoToScreen:
 				current_screen = current_action.screen;
+				screen_updated = true;
+				break;
+			default:
 				screen_updated = true;
 				break;
 		}

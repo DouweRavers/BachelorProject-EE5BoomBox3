@@ -62,8 +62,17 @@ const osThreadAttr_t InterfaceTask_attributes = {
   .priority = (osPriority_t) osPriorityLow,
   .stack_size = 128 * 4
 };
+/* Definitions for LEDscreenDriver */
+osThreadId_t LEDscreenDriverHandle;
+const osThreadAttr_t LEDscreenDriver_attributes = {
+  .name = "LEDscreenDriver",
+  .priority = (osPriority_t) osPriorityLow,
+  .stack_size = 128 * 4
+};
 /* USER CODE BEGIN PV */
-
+osThreadId_t mainThreadID = NULL;
+osThreadId_t InterfaceThreadID = NULL;
+osThreadId_t LEDThreadID = NULL;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -74,6 +83,7 @@ static void MX_TIM6_Init(void);
 static void MX_ADC1_Init(void);
 void StartMainTask(void *argument);
 void StartInterfaceTask(void *argument);
+void StartLEDscreenDriver(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -144,6 +154,9 @@ int main(void)
 
   /* creation of InterfaceTask */
   InterfaceTaskHandle = osThreadNew(StartInterfaceTask, NULL, &InterfaceTask_attributes);
+
+  /* creation of LEDscreenDriver */
+  LEDscreenDriverHandle = osThreadNew(StartLEDscreenDriver, NULL, &LEDscreenDriver_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -445,6 +458,13 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 
 }
 
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	if(htim == &htim6){
+		HAL_TIM_Base_Start_IT(&htim6);
+	}
+}
+
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartMainTask */
@@ -458,9 +478,11 @@ void StartMainTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
+	mainThreadID = osThreadGetId();
 	init_app();
 	for(;;)
 	{
+		osDelay(1000); // one tick per second
 		tick_app();
 	}
   /* USER CODE END 5 */
@@ -476,6 +498,7 @@ void StartMainTask(void *argument)
 void StartInterfaceTask(void *argument)
 {
   /* USER CODE BEGIN StartInterfaceTask */
+	InterfaceThreadID = osThreadGetId();
 	init_interface();
 	for(uint32_t frame = 0;1;frame++)
 	{
@@ -483,6 +506,25 @@ void StartInterfaceTask(void *argument)
 		tick_interface(frame);
 	}
   /* USER CODE END StartInterfaceTask */
+}
+
+/* USER CODE BEGIN Header_StartLEDscreenDriver */
+/**
+* @brief Function implementing the LEDscreenDriver thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartLEDscreenDriver */
+void StartLEDscreenDriver(void *argument)
+{
+  /* USER CODE BEGIN StartLEDscreenDriver */
+  /* Infinite loop */
+	LEDThreadID = osThreadGetId();
+	for(;;)
+	{
+		osDelay(1);
+	}
+  /* USER CODE END StartLEDscreenDriver */
 }
 
 /**
