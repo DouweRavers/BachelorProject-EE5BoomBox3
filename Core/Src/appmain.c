@@ -7,13 +7,14 @@
 
 #include "appmain.h"
 #include "main.h"
-#include "cmsis_os.h"
+
+osMemoryPoolId_t flags_MemPool_id;
 
 void init_app()
 {
-
 }
 
 void tick_app()
 {
+
 }

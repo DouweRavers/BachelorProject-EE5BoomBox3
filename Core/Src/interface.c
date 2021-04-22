@@ -7,7 +7,6 @@
 
 
 #include <stdbool.h>
-#include "cmsis_os.h"
 #include "LCD1602.h"
 
 #include "interface.h"
@@ -23,6 +22,9 @@ bool LED_enabled = false;
 /***************************
  *	private variables
  **************************/
+
+// timer
+TIM_HandleTypeDef *timer_handle;
 
 //	volume control
 int volume_delta = 0; // volume wheel went up/down
@@ -51,11 +53,14 @@ void buttons_controller(uint32_t value);
 
 
 /***************************
- *	public variables
+ *	public functions
  **************************/
-void init_interface()
+
+void init_interface(TIM_HandleTypeDef *htim)
 {
+	timer_handle = htim;
 	lcd_init ();
+	timer6owner = NULL;
 }
 
 void tick_interface(uint32_t frame)
@@ -67,15 +72,13 @@ void tick_interface(uint32_t frame)
 }
 
 
-void interrupt_interface(uint16_t GPIO_Pin , ADC_HandleTypeDef *hadc1)
+void interrupt_IO_interface(uint16_t GPIO_Pin , ADC_HandleTypeDef *hadc1)
 {
 	if(GPIO_Pin == GPIO_PIN_9)
 	{
 		if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10) == 1) volume_delta++;
 		else volume_delta--;
-	}
-
-	if(GPIO_Pin == GPIO_PIN_8){
+	} else if(GPIO_Pin == GPIO_PIN_8){
 		HAL_ADC_Start_IT(hadc1);
 	}
 }
@@ -84,7 +87,12 @@ void interrupt_adc_interface(ADC_HandleTypeDef *hadc){
 	    value_adc = HAL_ADC_GetValue(hadc);
 	    buttons_controller ( value_adc);
 	    HAL_ADC_Stop_IT(hadc);
+}
 
+void interrupt_timer_interface(TIM_HandleTypeDef *htim){
+	if(timer6owner == osThreadGetId() && htim == timer_handle){
+		HAL_TIM_Base_Start_IT(timer_handle);
+	}
 }
 
 /***************************

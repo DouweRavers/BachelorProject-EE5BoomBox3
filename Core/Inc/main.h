@@ -32,7 +32,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <cmsis_os2.h>
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -42,7 +42,7 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
-
+extern osThreadId_t timer6owner;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
@@ -82,6 +82,10 @@ void Error_Handler(void);
 #define VOL_B_INTERRUPT_EXTI_IRQn EXTI9_5_IRQn
 #define VOL_A_READ_Pin GPIO_PIN_10
 #define VOL_A_READ_GPIO_Port GPIOA
+#define LED_CLK_Pin GPIO_PIN_11
+#define LED_CLK_GPIO_Port GPIOA
+#define LED_DATA_Pin GPIO_PIN_12
+#define LED_DATA_GPIO_Port GPIOA
 #define T_SWDIO_Pin GPIO_PIN_13
 #define T_SWDIO_GPIO_Port GPIOA
 #define T_SWCLK_Pin GPIO_PIN_14

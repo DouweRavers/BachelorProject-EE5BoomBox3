@@ -25,11 +25,11 @@
 /* USER CODE BEGIN Includes */
 #include "appmain.h"
 #include "interface.h"
+#include "ledeffects.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -38,7 +38,7 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+osThreadId_t timer6owner = NULL;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -70,9 +70,6 @@ const osThreadAttr_t LEDscreenDriver_attributes = {
   .stack_size = 128 * 4
 };
 /* USER CODE BEGIN PV */
-osThreadId_t mainThreadID = NULL;
-osThreadId_t InterfaceThreadID = NULL;
-osThreadId_t LEDThreadID = NULL;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -110,7 +107,6 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -145,7 +141,6 @@ int main(void)
   /* USER CODE END RTOS_TIMERS */
 
   /* USER CODE BEGIN RTOS_QUEUES */
-  /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
@@ -159,6 +154,8 @@ int main(void)
   LEDscreenDriverHandle = osThreadNew(StartLEDscreenDriver, NULL, &LEDscreenDriver_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
+  timer6owner = InterfaceTaskHandle; // assign timer6 usage to inteface thread
+
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
 
@@ -401,15 +398,15 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, LCD_RS_Pin|LCD_E_Pin|LCD_D4_Pin|LCD_D5_Pin
-                          |LCD_D6_Pin|LCD_D7_Pin, GPIO_PIN_RESET);
+                          |LCD_D6_Pin|LCD_D7_Pin|LED_CLK_Pin|LED_DATA_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : LCD_RS_Pin LCD_E_Pin LCD_D4_Pin LCD_D5_Pin
-                           LCD_D6_Pin LCD_D7_Pin */
+                           LCD_D6_Pin LCD_D7_Pin LED_CLK_Pin LED_DATA_Pin */
   GPIO_InitStruct.Pin = LCD_RS_Pin|LCD_E_Pin|LCD_D4_Pin|LCD_D5_Pin
-                          |LCD_D6_Pin|LCD_D7_Pin;
+                          |LCD_D6_Pin|LCD_D7_Pin|LED_CLK_Pin|LED_DATA_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -449,20 +446,18 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-	interrupt_interface( GPIO_Pin , &hadc1);
+	interrupt_IO_interface( GPIO_Pin , &hadc1);
 }
+
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
 	interrupt_adc_interface(hadc);
-
-
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	if(htim == &htim6){
-		HAL_TIM_Base_Start_IT(&htim6);
-	}
+	void interrupt_timer_interface(TIM_HandleTypeDef *htim);
+	void interrupt_timer_led(TIM_HandleTypeDef *htim);
 }
 
 /* USER CODE END 4 */
@@ -473,17 +468,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   * @param  argument: Not used
   * @retval None
   */
+
 /* USER CODE END Header_StartMainTask */
 void StartMainTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
-	mainThreadID = osThreadGetId();
 	init_app();
 	for(;;)
 	{
-		osDelay(1000); // one tick per second
 		tick_app();
+		osDelay(1000); // one tick per second
 	}
   /* USER CODE END 5 */
 }
@@ -498,12 +493,11 @@ void StartMainTask(void *argument)
 void StartInterfaceTask(void *argument)
 {
   /* USER CODE BEGIN StartInterfaceTask */
-	InterfaceThreadID = osThreadGetId();
-	init_interface();
+	init_interface(&htim6);
 	for(uint32_t frame = 0;1;frame++)
 	{
-		osDelay(33); // Interface will update at 30FPS
 		tick_interface(frame);
+		osDelay(33); // Interface will update at 30FPS
 	}
   /* USER CODE END StartInterfaceTask */
 }
@@ -519,10 +513,11 @@ void StartLEDscreenDriver(void *argument)
 {
   /* USER CODE BEGIN StartLEDscreenDriver */
   /* Infinite loop */
-	LEDThreadID = osThreadGetId();
-	for(;;)
+	init_led(&htim6);
+	for(uint32_t frame = 0;1;frame++)
 	{
-		osDelay(1);
+		tick_led(frame);
+		osDelay(66); // Interface will update at 15FPS
 	}
   /* USER CODE END StartLEDscreenDriver */
 }
