@@ -8,7 +8,6 @@
 #ifndef INC_INTERFACE_H_
 #define INC_INTERFACE_H_
 
-#include <stdbool.h>
 #include "main.h"
 
 extern uint8_t volume_level;
