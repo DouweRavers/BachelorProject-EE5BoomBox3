@@ -54,14 +54,20 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-
+UART_HandleTypeDef* getUartPointerBluetooth();
+char getDataAvailableF();
+void setDataAvailableF();
+char getBussy();
+void clearBussy();
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define USART2_TX_Pin GPIO_PIN_2
-#define USART2_TX_GPIO_Port GPIOA
-#define USART2_RX_Pin GPIO_PIN_3
-#define USART2_RX_GPIO_Port GPIOA
+#define Rx_ind_Pin GPIO_PIN_1
+#define Rx_ind_GPIO_Port GPIOA
+#define TX_BO_Pin GPIO_PIN_9
+#define TX_BO_GPIO_Port GPIOA
+#define RX_BO_Pin GPIO_PIN_10
+#define RX_BO_GPIO_Port GPIOA
 #define T_SWDIO_Pin GPIO_PIN_13
 #define T_SWDIO_GPIO_Port GPIOA
 #define T_SWCLK_Pin GPIO_PIN_14

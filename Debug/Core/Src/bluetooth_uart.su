@@ -1,0 +1,9 @@
+bluetooth_uart.c:12:6:enterPairingModeFromOff	16	static
+bluetooth_uart.c:16:6:changeDeviceName	24	static
+bluetooth_uart.c:20:6:powerOn	16	static
+bluetooth_uart.c:28:6:playPauseMusic	16	static
+bluetooth_uart.c:36:6:readBtmVersion	16	static
+bluetooth_uart.c:44:6:sendCommand	40	dynamic
+bluetooth_uart.c:55:5:readEvent	32	static
+bluetooth_uart.c:101:10:makeCommand	40	static
+bluetooth_uart.c:112:9:makeCheckSum	24	static
