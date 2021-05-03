@@ -26,6 +26,9 @@ bool LED_enabled = false;
 
 //	volume control
 int volume_delta = 0; // volume wheel went up/down
+const uint8_t LPOT_ADDR = 0b01010100, RPOT_ADDR = 0b01011110; // I2C adresses
+I2C_HandleTypeDef hi2c1;
+
 //	screen control
 bool screen_updated = true; // indicator of when to rewrite screen output
 enum screentype previous_screen = StartScreen, current_screen = StartScreen; // keep track of the current and previous screen
@@ -53,9 +56,11 @@ void buttons_controller(uint32_t value);
 /***************************
  *	public variables
  **************************/
-void init_interface()
+void init_interface(I2C_HandleTypeDef hi2c)
 {
+	hi2c1 = hi2c;
 	lcd_init ();
+	osDelay(10);
 }
 
 void tick_interface(uint32_t frame)
@@ -141,6 +146,28 @@ void volume_update(uint32_t frame)
 		volume_delta = 0;
 		set_screen(VolumeScreen);
 	}
+	configure_potentiometers();
+
+}
+
+void configure_potentiometers()
+{
+	// write to RDAC1 meaning positive side potentiometers
+	uint8_t com_and_adr = 0b00010000, data = 0xff / 20 * volume_level; // 0 = command and address of RDAC register, 1 = to write value of RDAC register
+	uint16_t buf = data;
+	buf = buf << 8;
+	buf += com_and_adr;
+	while(HAL_I2C_Master_Transmit(&hi2c1, LPOT_ADDR, &buf, 2, HAL_MAX_DELAY) != HAL_OK); // send volume as long as the potentiometers accept
+	while(HAL_I2C_Master_Transmit(&hi2c1, RPOT_ADDR, &buf, 2, HAL_MAX_DELAY) != HAL_OK);
+
+	// write to RDAC2 meaning negative side potentiometers
+	com_and_adr = 0b00010001; // 0 = command and address of RDAC register, 1 = to write value of RDAC register
+	buf = data;
+	buf = buf << 8;
+	buf += com_and_adr;
+	// configure the positive side potentiometers
+	while(HAL_I2C_Master_Transmit(&hi2c1, LPOT_ADDR, &buf, 2, HAL_MAX_DELAY) != HAL_OK);
+	while(HAL_I2C_Master_Transmit(&hi2c1, RPOT_ADDR, &buf, 2, HAL_MAX_DELAY) != HAL_OK);
 }
 
 // Button driver

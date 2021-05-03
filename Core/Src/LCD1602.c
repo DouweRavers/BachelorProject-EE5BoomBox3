@@ -39,9 +39,9 @@ void delay (uint16_t us) // this should become a global method
 	__HAL_TIM_SET_COUNTER(&timer, 0);
 	while (__HAL_TIM_GET_COUNTER(&timer) < us);
 	// Better way (to be tested)
-	__HAL_TIM_SET_COUNTER(&timer, 0xffff - us); // set timer us away from overflow
-	HAL_TIM_Base_Start_IT(&htim6); // if start timer (disable in main at 127)
-	osThreadSuspend(osThreadGetId());
+	//__HAL_TIM_SET_COUNTER(&timer, 0xffff - us); // set timer us away from overflow
+	//HAL_TIM_Base_Start_IT(&htim6); // if start timer (disable in main at 127)
+	//osThreadSuspend(osThreadGetId());
 }
 
 /****************************************************************************************************************************************************************/
