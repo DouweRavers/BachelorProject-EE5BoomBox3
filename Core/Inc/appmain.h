@@ -8,7 +8,9 @@
 #ifndef INC_APPMAIN_H_
 #define INC_APPMAIN_H_
 
-void init_app(); // set-up application
+#include "main.h"
+
+void init_app(I2C_HandleTypeDef hi2c, TIM_HandleTypeDef htim); // set-up application
 void tick_app(); // inf-loop of application
 
 

@@ -7,6 +7,7 @@
 
 
 #include <stdbool.h>
+#include <math.h>
 #include "cmsis_os.h"
 #include "LCD1602.h"
 
@@ -51,7 +52,8 @@ void volume_update(uint32_t frame); // processes the volume input
 void set_screen(enum screentype screen); // toggle between menu screens
 //	button control
 void buttons_controller(uint32_t value);
-
+//  volume control
+void configure_potentiometers();
 
 /***************************
  *	public variables
@@ -89,7 +91,6 @@ void interrupt_adc_interface(ADC_HandleTypeDef *hadc){
 	    value_adc = HAL_ADC_GetValue(hadc);
 	    buttons_controller ( value_adc);
 	    HAL_ADC_Stop_IT(hadc);
-
 }
 
 /***************************
@@ -153,12 +154,13 @@ void volume_update(uint32_t frame)
 void configure_potentiometers()
 {
 	// write to RDAC1 meaning positive side potentiometers
-	uint8_t com_and_adr = 0b00010000, data = 0xff / 20 * volume_level; // 0 = command and address of RDAC register, 1 = to write value of RDAC register
+	uint8_t com_and_adr = 0b00010000, data = floor(0xff / 20) * volume_level; // 0 = command and address of RDAC register, 1 = to write value of RDAC register
 	uint16_t buf = data;
 	buf = buf << 8;
 	buf += com_and_adr;
-	while(HAL_I2C_Master_Transmit(&hi2c1, LPOT_ADDR, &buf, 2, HAL_MAX_DELAY) != HAL_OK); // send volume as long as the potentiometers accept
-	while(HAL_I2C_Master_Transmit(&hi2c1, RPOT_ADDR, &buf, 2, HAL_MAX_DELAY) != HAL_OK);
+	uint8_t sound_info[2] = {0b00010000, floor(0xff / 20) * volume_level};
+	while(HAL_I2C_Master_Transmit(&hi2c1, LPOT_ADDR, &sound_info[0], 2, HAL_MAX_DELAY) != HAL_OK); // send volume as long as the potentiometers accept
+	while(HAL_I2C_Master_Transmit(&hi2c1, RPOT_ADDR, &sound_info[1], 2, HAL_MAX_DELAY) != HAL_OK);
 
 	// write to RDAC2 meaning negative side potentiometers
 	com_and_adr = 0b00010001; // 0 = command and address of RDAC register, 1 = to write value of RDAC register

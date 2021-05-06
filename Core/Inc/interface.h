@@ -15,7 +15,7 @@ extern uint8_t volume_level;
 extern bool LED_enabled;
 
 // public functions
-void init_interface(); // set-up user interface
+void init_interface(I2C_HandleTypeDef hi2c); // set-up user interface
 void tick_interface(uint32_t frame); // inf-loop of user interface
 void interrupt_interface(uint16_t GPIO_Pin , ADC_HandleTypeDef *hadc1); // handles IO interrupts
 void interrupt_adc_interface(ADC_HandleTypeDef *hadc); // handles adc interrupts
