@@ -10,59 +10,40 @@
 
 #include "stm32g4xx_hal.h"
 #include "cmsis_os.h"
-
-
-/*********** Define the LCD PINS below ****************/
-
-#define RS_Pin GPIO_PIN_0
-#define RS_GPIO_Port GPIOA
-//#define RW_Pin GPIO_PIN_2
-//#define RW_GPIO_Port GPIOA
-#define EN_Pin GPIO_PIN_1
-#define EN_GPIO_Port GPIOA
-#define D4_Pin GPIO_PIN_4
-#define D4_GPIO_Port GPIOA
-#define D5_Pin GPIO_PIN_5
-#define D5_GPIO_Port GPIOA
-#define D6_Pin GPIO_PIN_6
-#define D6_GPIO_Port GPIOA
-#define D7_Pin GPIO_PIN_7
-#define D7_GPIO_Port GPIOA
+#include "main.h"
 
 /****************** define the timer handler below  **************/
-#define timer htim6
+TIM_HandleTypeDef * htim6;
 
 
-extern TIM_HandleTypeDef timer;
-void delay (uint16_t us) // this should become a global method
+void delay (uint16_t us)
 {
-	__HAL_TIM_SET_COUNTER(&timer, 0);
-	while (__HAL_TIM_GET_COUNTER(&timer) < us);
-	// Better way (to be tested)
-	//__HAL_TIM_SET_COUNTER(&timer, 0xffff - us); // set timer us away from overflow
-	//HAL_TIM_Base_Start_IT(&htim6); // if start timer (disable in main at 127)
-	//osThreadSuspend(osThreadGetId());
+	HAL_TIM_Base_Stop(htim6);
+	__HAL_TIM_SET_COUNTER(htim6, 0);
+	HAL_TIM_Base_Start(htim6);
+	while (((uint16_t) __HAL_TIM_GET_COUNTER(htim6)) < us);
+
 }
 
 /****************************************************************************************************************************************************************/
 
 void send_to_lcd (char data, int rs)
 {
-	HAL_GPIO_WritePin(RS_GPIO_Port, RS_Pin, rs);  // rs = 1 for data, rs=0 for command
+	HAL_GPIO_WritePin(LCD_RS_GPIO_Port, LCD_RS_Pin, rs);  // rs = 1 for data, rs=0 for command
 
 	/* write the data to the respective pin */
-	HAL_GPIO_WritePin(D7_GPIO_Port, D7_Pin, ((data>>3)&0x01));
-	HAL_GPIO_WritePin(D6_GPIO_Port, D6_Pin, ((data>>2)&0x01));
-	HAL_GPIO_WritePin(D5_GPIO_Port, D5_Pin, ((data>>1)&0x01));
-	HAL_GPIO_WritePin(D4_GPIO_Port, D4_Pin, ((data>>0)&0x01));
+	HAL_GPIO_WritePin(LCD_D6_GPIO_Port, LCD_D7_Pin, ((data>>3)&0x01));
+	HAL_GPIO_WritePin(LCD_D6_GPIO_Port, LCD_D6_Pin, ((data>>2)&0x01));
+	HAL_GPIO_WritePin(LCD_D5_GPIO_Port, LCD_D5_Pin, ((data>>1)&0x01));
+	HAL_GPIO_WritePin(LCD_D4_GPIO_Port, LCD_D4_Pin, ((data>>0)&0x01));
 
 	/* Toggle EN PIN to send the data
 	 * if the HCLK > 100 MHz, use the  20 us delay
 	 * if the LCD still doesn't work, increase the delay to 50, 80 or 100..
 	 */
-	HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, 1);
+	HAL_GPIO_WritePin(LCD_E_GPIO_Port, LCD_E_Pin, 1);
 	delay (20);
-	HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, 0);
+	HAL_GPIO_WritePin(LCD_E_GPIO_Port, LCD_E_Pin, 0);
 	delay (20);
 }
 
@@ -114,8 +95,9 @@ void lcd_put_cur(int row, int col)
 }
 
 
-void lcd_init (void)
+void lcd_init (TIM_HandleTypeDef *htim)
 {
+	htim6 = htim;
 	// 4 bit initialisation
 	osDelay(50);  // wait for >40ms
 	lcd_send_cmd (0x30);

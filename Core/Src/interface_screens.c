@@ -7,6 +7,7 @@
 
 #include "interface_screens.h"
 #include "interface.h"
+#include "bluetooth_uart.h"
 #include <string.h>
 
 
@@ -19,8 +20,6 @@
  */
 
 void getScreenOutputVolume(uint32_t frame, char * first, char * second); // volume popup
-void getScreenOutputBluetoothConnect(uint32_t frame, char * first, char * second); // bluetooth connect popup
-void getScreenOutputBluetoothDisconnect(uint32_t frame, char * first, char * second); // bluetooth disconnect popup
 struct buttonaction onButtonPressedPopUp(enum direction dir); //
 
 /***********************
@@ -31,17 +30,22 @@ struct buttonaction onButtonPressedPopUp(enum direction dir); //
 void getScreenOutputStart(uint32_t frame, char * first, char * second);
 struct buttonaction onButtonPressedStart(enum direction dir);
 
-// bluetooth search screen
-void getScreenOutputBluetoothSearch(uint32_t frame, char * first, char * second);
-struct buttonaction onButtonPressedBluetoothSearch(enum direction dir);
+// Main menu screen
+enum menu_selection { SongPlayer, LedMenu };
+enum menu_selection current_menu_selection = SongPlayer;
+void getScreenOutputMenu(uint32_t frame, char * first, char * second);
+struct buttonaction onButtonPressedMenu(enum direction dir);
 
 // Enable LED screen
+enum led_selection { Enable, Mode, Exit };
+enum led_selection current_led_selection = SongPlayer;
+enum led_modes led_mode = Smooth;
 void getScreenOutputLed(uint32_t frame, char * first, char * second);
 struct buttonaction onButtonPressedLed(enum direction dir);
 
 // Shows song and artist names if known
-void getScreenOutputPlay(uint32_t frame, char * first, char * second);
-struct buttonaction onButtonPressedPlay(enum direction dir);
+void getScreenOutputSong(uint32_t frame, char * first, char * second);
+struct buttonaction onButtonPressedSong(enum direction dir);
 
 /********************
  * 		array
@@ -50,13 +54,10 @@ struct buttonaction onButtonPressedPlay(enum direction dir);
 // screen array
 struct screen screens[] = {
 		{ VolumeScreen, &getScreenOutputVolume, &onButtonPressedPopUp, 60 },
-		{ BluetoothConnectScreen, &getScreenOutputBluetoothConnect, &onButtonPressedPopUp, 60 },
-		{ BluetoothDisconnectScreen, &getScreenOutputBluetoothDisconnect, &onButtonPressedPopUp, 60 },
 		{ StartScreen, &getScreenOutputStart, &onButtonPressedStart, 0 },
-		{ BluetoothScreen, &getScreenOutputBluetoothSearch, &onButtonPressedBluetoothSearch, 0 },
-		{ LedScreen, &getScreenOutputLed, &onButtonPressedLed, 0 },
-		{ PlayScreen, &getScreenOutputPlay, &onButtonPressedPlay, 0 }
-
+		{ MenuScreen, &getScreenOutputMenu, &onButtonPressedMenu, 0 },
+		{ SongScreen, &getScreenOutputSong, &onButtonPressedSong, 0 },
+		{ LedScreen, &getScreenOutputLed, &onButtonPressedLed, 0 }
 };
 
 /*****************************
@@ -87,24 +88,6 @@ struct buttonaction onButtonPressedPopUp(enum direction dir){
 	return response;
 }
 
-// bluetooth connected popup
-void getScreenOutputBluetoothConnect(uint32_t frame, char * first, char * second)
-{
-	char r_first[] = "Bluetooth device";
-	char r_second[] = "connected!";
-	strncpy(first, r_first, 16);
-	strncpy(second, r_second, 16);
-}
-
-// bluetooth disconnect popup
-void getScreenOutputBluetoothDisconnect(uint32_t frame, char * first, char * second)
-{
-	char r_first[] = "Bluetooth device";
-	char r_second[] = "Disconnected!";
-	strncpy(first, r_first, 16);
-	strncpy(second, r_second, 16);
-}
-
 /***********************
  * 		Menu tabs
  */
@@ -112,52 +95,78 @@ void getScreenOutputBluetoothDisconnect(uint32_t frame, char * first, char * sec
 // Start screen
 void getScreenOutputStart(uint32_t frame, char * first, char * second)
 {
-	char r_first[] = "    MainMenu";
-	char r_second[] = "\x7f L    ^P^   B \x7e";
+	char r_first[17] = "   Welcome!";
+	char r_second[17], message[] = "  Press any button to continue...";
+	// frame based animation
+	int m_lenght = strlen(message); // artist lenght
+	uint8_t offset = (frame%(m_lenght*15))/15-1;
+	for(int i=0;i<16;i++){
+		if(offset+i < m_lenght) r_second[i] = message[offset+i];
+	}
 	strncpy(first, r_first, 16);
 	strncpy(second, r_second, 16);
 }
 
 struct buttonaction onButtonPressedStart(enum direction dir)
 {
-	struct buttonaction response = { GoToScreen, 0 };
-	switch(dir)
-	{
-	case Left:
-		response.screen = LedScreen;
-			break;
-	case Right:
-		response.screen = BluetoothScreen;
-			break;
-	case Up:
-		response.screen = PlayScreen;
-		break;
-	default:
-		response.action = NoBehavior;
-		break;
+	struct buttonaction response = { NoBehavior, 0 };
+	if(dir != NoSelection){
+		response.action = GoToScreen;
+		response.screen = MenuScreen;
 	}
 	return response;
 }
 
-// When then device searches for a bluetooth device it goes to this screen.
-void getScreenOutputBluetoothSearch(uint32_t frame, char * first, char * second)
+// Main menu different settings accessed from here
+void getScreenOutputMenu(uint32_t frame, char * first, char * second)
 {
-	char r_first[] = "   Bluetooth";
-	char r_second[] = "\x7f M Searching";
-	for(int i=1;i<=3;i++){
-		if(frame%60 > 15*i) strcat(".", r_second);
+	char r_first[17], r_second[17];
+	// first line animation
+	switch(frame/15 % 6){
+	case 0:
+			strncpy(r_first, " oooO Menu Oooo ", 16);
+			break;
+	case 1: case 5:
+			strncpy(r_first, " ooOo Menu oOoo ", 16);
+			break;
+	case 2: case 4:
+			strncpy(r_first, " oOoo Menu ooOo ", 16);
+			break;
+	case 3:
+			strncpy(r_first, " Oooo Menu oooO ", 16);
+			break;
+	}
+
+	// second line animation
+	switch(current_menu_selection)
+	{
+		case SongPlayer:
+			strncpy(r_second, "\x7f  Song Menu   \x7e", 16);
+			break;
+		case LedMenu:
+			strncpy(r_second, "\x7f  LED  Menu   \x7e", 16);
+			break;
+		default:
+			strncpy(r_second, "  xx Error xx  ", 16);
+			break;
 	}
 	strncpy(first, r_first, 16);
 	strncpy(second, r_second, 16);
 }
 
-struct buttonaction onButtonPressedBluetoothSearch(enum direction dir)
+struct buttonaction onButtonPressedMenu(enum direction dir)
 {
-	struct buttonaction response = { GoToScreen, 0 };
+	struct buttonaction response = { NoBehavior, 0 };
 	switch(dir)
 	{
-	case Left:
-		response.screen = StartScreen;
+	case Enter:
+		response.action = GoToScreen;
+		if(current_menu_selection == SongPlayer) response.screen = SongScreen;
+		else if(current_menu_selection == LedMenu) response.screen = LedScreen;
+		break;
+	case Left: case Right:
+		if(current_menu_selection == SongPlayer) current_menu_selection = LedMenu;
+		else if(current_menu_selection == LedMenu) current_menu_selection = SongPlayer;
 		break;
 	default:
 		response.action = NoBehavior;
@@ -166,73 +175,151 @@ struct buttonaction onButtonPressedBluetoothSearch(enum direction dir)
 	return response;
 }
 
-// a configuration screen which (dis)enables the led effects
+// A side menu for enabling leds and setting animation type
 void getScreenOutputLed(uint32_t frame, char * first, char * second)
 {
-	char r_first[] = "   LED effects";
-	char r_second[] = "\x7f E Disabled M \x7e";
-	if(LED_enabled) strcpy(r_second, "\x7f D  Enabled M \x7e");
+	char r_first[17], r_second[17];
+	// first line animation
+	switch(led_mode){
+		case Smooth:
+			if (frame%2==0) strncpy(r_first, " \xCAv LED Menu \xCAv ", 16);
+			else strncpy(r_first, " v\xCA LED Menu v\xCA ", 16);
+			break;
+		case Flicker:
+			if (frame%2==0) strncpy(r_first, " ** LED Menu ** ", 16);
+			else strncpy(r_first, " xx LED Menu xx ", 16);
+			break;
+		case MonoRed: case MonoGreen: case MonoYellow:
+			strncpy(r_first, " ## LED Menu ## ", 16);
+			break;
+	}
+
+	// second line animation
+	switch(current_led_selection)
+	{
+		case Enable:
+			if(LED_enabled) strncpy(r_second, "\x7f Disable LEDs \x7e", 16);
+			else strncpy(r_second, "\x7f Enable  LEDs \x7e", 16);
+			break;
+		case Mode:
+			switch(led_mode){
+				case Smooth:
+					if (frame%2==0) strncpy(r_second, "\x7f \xCAv Smooth \xCAv \x7e", 16);
+					else strncpy(r_second, "\x7f v\xCA Smooth v\xCA \x7e", 16);
+					break;
+				case Flicker:
+					if (frame%2==0) strncpy(r_second, "\x7f ** Flicker **\x7e", 16);
+					else strncpy(r_second, "\x7f xx Flicker xx\x7e", 16);
+					break;
+				case MonoRed:
+					strncpy(r_second, "\x7f   Mono Red   \x7e", 16);
+					break;
+				case MonoGreen:
+					strncpy(r_second, "\x7f  Mono Green  \x7e", 16);
+					break;
+				case MonoYellow:
+					strncpy(r_second, "\x7f Mono Yellow  \x7e", 16);
+					break;
+			}
+			break;
+		case Exit:
+			strncpy(r_second, "\x7f  Exit  Menu  \x7e", 16);
+			break;
+		default:
+			strncpy(r_second, "  xx Error xx  ", 16);
+			break;
+	}
 	strncpy(first, r_first, 16);
 	strncpy(second, r_second, 16);
 }
 
 struct buttonaction onButtonPressedLed(enum direction dir)
 {
-	struct buttonaction response = { GoToScreen, 0 };
+	struct buttonaction response = { NoBehavior, 0 };
 	switch(dir)
 	{
 	case Enter:
+		switch(current_led_selection)
+		{
+			case Enable:
+				LED_enabled = !LED_enabled;
+				break;
+			case Exit:
+				response.action = GoToScreen;
+				response.screen = MenuScreen;
+				break;
+			default:
+				break;
+		}
+		break;
 	case Left:
-		LED_enabled = !LED_enabled;
-		response.screen = LedScreen; // update screen
+		if(current_led_selection == Enable) current_led_selection = Exit;
+		else current_led_selection--;
 		break;
 	case Right:
-		response.screen = StartScreen;
+		if(current_led_selection == Exit) current_led_selection = Enable;
+		else current_led_selection++;
+		break;
+	case Up:
+		if(current_led_selection == Mode) {
+			if(led_mode == Smooth) led_mode = MonoYellow;
+			else led_mode--;
+		}
+		break;
+	case Down:
+		if(current_led_selection == Mode){
+			if(led_mode == MonoYellow) led_mode = Smooth;
+			else led_mode++;
+		}
 		break;
 	default:
-		response.action = NoBehavior;
 		break;
 	}
 	return response;
 }
 
-void getScreenOutputPlay(uint32_t frame, char * first, char * second)
+void getScreenOutputSong(uint32_t frame, char * first, char * second)
 {
-	char s_dummy[] = "Songname";
-	char a_dummy[] = "Artistname that is to long";
-
-	char r_first[17] = "S: ";
-	char r_second[17] = "A: ";
-	int s_lenght = strlen(s_dummy); // song lenght
-	int a_lenght = strlen(a_dummy); // artist lenght
-	if(s_lenght <= 14) strcat(r_first, s_dummy);
-	else{
-		uint8_t s_offset = (frame%(s_lenght*30))/30-1;
-		for(int i=0;i<13;i++){
-			if(s_offset+i < s_lenght) r_first[3+i] = s_dummy[s_offset+i];
-		}
+	char r_first[17], r_second[17] = "\x7fPrev >/|| Next\x7e";
+	// first line animation
+	switch(frame/15 % 6){
+	case 0:
+			strncpy(r_first, " oooO Song Oooo ", 16);
+			break;
+	case 1: case 5:
+			strncpy(r_first, " ooOo Song oOoo ", 16);
+			break;
+	case 2: case 4:
+			strncpy(r_first, " oOoo Song ooOo ", 16);
+			break;
+	case 3:
+			strncpy(r_first, " Oooo Song oooO ", 16);
+			break;
 	}
-	if(a_lenght <= 14) strcat(r_second, a_dummy);
-	else{
-		uint8_t a_offset = (frame%(a_lenght*30))/30-1;
-		for(int i=0;i<13;i++){
-			if(a_offset+i < a_lenght) r_second[3+i] = a_dummy[a_offset+i];
-		}
-	}
+	// Second line animation
 	strncpy(first, r_first, 16);
 	strncpy(second, r_second, 16);
 }
 
-struct buttonaction onButtonPressedPlay(enum direction dir)
+struct buttonaction onButtonPressedSong(enum direction dir)
 {
-	struct buttonaction response = { GoToScreen, 0 };
+	struct buttonaction response = { NoBehavior, 0 };
 	switch(dir)
 	{
-	case Down:
-			response.screen = StartScreen;
+	case Up:
+			response.action = GoToScreen;
+			response.screen = MenuScreen;
 			break;
+	case Left:
+		bmSwitchToPreviousSong();
+		break;
+	case Right:
+		bmSwitchToNextSong();
+		break;
+	case Enter:
+		bmPlayPauseMusic();
+		break;
 	default:
-		response.screen = PlayScreen;
 		break;
 	}
 	return response;

@@ -28,7 +28,8 @@ bool LED_enabled = false;
 //	volume control
 int volume_delta = 0; // volume wheel went up/down
 const uint8_t LPOT_ADDR = 0b01010100, RPOT_ADDR = 0b01011110; // I2C adresses
-I2C_HandleTypeDef hi2c1;
+I2C_HandleTypeDef * hi2c1;
+TIM_HandleTypeDef * htim6;
 
 //	screen control
 bool screen_updated = true; // indicator of when to rewrite screen output
@@ -58,10 +59,11 @@ void configure_potentiometers();
 /***************************
  *	public variables
  **************************/
-void init_interface(I2C_HandleTypeDef hi2c)
+void init_interface(I2C_HandleTypeDef * hi2c, TIM_HandleTypeDef *htim)
 {
 	hi2c1 = hi2c;
-	lcd_init ();
+	htim6 = htim;
+	lcd_init(htim);
 	osDelay(10);
 }
 
@@ -92,6 +94,13 @@ void interrupt_adc_interface(ADC_HandleTypeDef *hadc){
 	    buttons_controller ( value_adc);
 	    HAL_ADC_Stop_IT(hadc);
 }
+
+void interrupt_timer_interface(TIM_HandleTypeDef *htim){
+	if(htim == htim6){
+		HAL_TIM_Base_Start_IT(htim6);
+	}
+}
+
 
 /***************************
  *	private functions
@@ -126,7 +135,7 @@ void interface_update(uint32_t frame)
 
 void screen_update(uint32_t frame)
 {
-	if(screen_updated)
+	if(screen_updated || frame % 15 == 0) // update when new screen
 	{
 		lcd_clear();
 		char first[16], second[16];
@@ -147,8 +156,7 @@ void volume_update(uint32_t frame)
 		volume_delta = 0;
 		set_screen(VolumeScreen);
 	}
-	configure_potentiometers();
-
+	//configure_potentiometers();
 }
 
 void configure_potentiometers()
@@ -159,37 +167,34 @@ void configure_potentiometers()
 	buf = buf << 8;
 	buf += com_and_adr;
 	uint8_t sound_info[2] = {0b00010000, floor(0xff / 20) * volume_level};
-	while(HAL_I2C_Master_Transmit(&hi2c1, LPOT_ADDR, &sound_info[0], 2, HAL_MAX_DELAY) != HAL_OK); // send volume as long as the potentiometers accept
-	while(HAL_I2C_Master_Transmit(&hi2c1, RPOT_ADDR, &sound_info[1], 2, HAL_MAX_DELAY) != HAL_OK);
-
+	// send volume as long as the potentiometers accept
+	for(int i=0;i<10 && HAL_I2C_Master_Transmit(hi2c1, LPOT_ADDR, sound_info, 2, 50) != HAL_OK;i++);
+	for(int i=0;i<10 && HAL_I2C_Master_Transmit(hi2c1, RPOT_ADDR, &buf, 2, 50) != HAL_OK;i++);
 	// write to RDAC2 meaning negative side potentiometers
 	com_and_adr = 0b00010001; // 0 = command and address of RDAC register, 1 = to write value of RDAC register
 	buf = data;
 	buf = buf << 8;
 	buf += com_and_adr;
 	// configure the positive side potentiometers
-	while(HAL_I2C_Master_Transmit(&hi2c1, LPOT_ADDR, &buf, 2, HAL_MAX_DELAY) != HAL_OK);
-	while(HAL_I2C_Master_Transmit(&hi2c1, RPOT_ADDR, &buf, 2, HAL_MAX_DELAY) != HAL_OK);
+	for(int i=0;i<10 && HAL_I2C_Master_Transmit(hi2c1, LPOT_ADDR, &buf, 2, 50) != HAL_OK;i++);
+	for(int i=0;i<10 && HAL_I2C_Master_Transmit(hi2c1, RPOT_ADDR, &buf, 2, 50) != HAL_OK;i++);
 }
 
 // Button driver
 void buttons_controller( uint32_t value ){
 	enum direction button = NoSelection;
 	// I use a marge of +- 100
-	if ( value >= 2560 && value <= 2660){ // avg 2610
-		button = Left;
-	}
-	else if ( value >= 2720 && value <= 2820){ // avg 2770
-		button = Up;
-	}
-	else if (value >=  3050 && value <= 3150){ // avg 3100
-		button = Down;
-	}
-	else if (value >=  3540 && value <= 3640){ // avg 3590
-		button =  Enter;
-	}
-	else if (value >= 4040){
+	if ( value <= 2000) {
+	} else if ( value <= 2730){ // avg 2610
 		button = Right;
+	} else if ( value <= 2900){ // avg 2770
+		button = Down;
+	} else if ( value <= 3300){ // avg 3100
+		button = Up;
+	} else if ( value <= 3800){ // avg 3590
+		button =  Enter;
+	} else {
+		button = Left;
 	}
 	last_registered_button = button;
 	current_action = screens[current_screen].OnButtonPressed(button);

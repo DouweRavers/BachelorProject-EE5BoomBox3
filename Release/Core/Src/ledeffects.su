@@ -1,0 +1,4 @@
+ledeffects.c:96:6:interrupt_timer_led	16	static
+ledeffects.c:116:6:colors_to_screen	40	static
+ledeffects.c:39:6:init_led	80	static
+ledeffects.c:50:6:tick_led	88	static

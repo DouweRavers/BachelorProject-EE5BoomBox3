@@ -7,9 +7,10 @@
 
 #ifndef INC_LCD1602_H_
 #define INC_LCD1602_H_
+#include "main.h"
 
 
-void lcd_init (void);   // initialize lcd
+void lcd_init (TIM_HandleTypeDef *htim);   // initialize lcd
 
 void lcd_send_cmd (char cmd);  // send command to the lcd
 

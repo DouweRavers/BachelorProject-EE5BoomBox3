@@ -10,7 +10,7 @@
 
 #include "main.h"
 
-void init_app(I2C_HandleTypeDef hi2c, TIM_HandleTypeDef htim); // set-up application
+void init_app(I2C_HandleTypeDef hi2c); // set-up application
 void tick_app(); // inf-loop of application
 
 
