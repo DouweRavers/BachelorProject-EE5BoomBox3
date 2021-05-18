@@ -2,9 +2,9 @@ interface_screens.c:86:21:onButtonPressedPopUp	8	static
 interface_screens.c:110:21:onButtonPressedStart	8	static
 interface_screens.c:157:21:onButtonPressedMenu	8	static
 interface_screens.c:236:21:onButtonPressedLed	8	static
-interface_screens.c:308:21:onButtonPressedSong	8	static
 interface_screens.c:72:6:getScreenOutputVolume	56	static
 interface_screens.c:96:6:getScreenOutputStart	104	static
 interface_screens.c:121:6:getScreenOutputMenu	64	static
 interface_screens.c:179:6:getScreenOutputLed	64	static
-interface_screens.c:281:6:getScreenOutputSong	112	static
+interface_screens.c:281:6:getScreenOutputSong	64	static
+interface_screens.c:304:21:onButtonPressedSong	16	static

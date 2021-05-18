@@ -7,24 +7,20 @@
 
 #include "appmain.h"
 #include "main.h"
-#include "cmsis_os.h"
+#include "bluetooth_uart.h"
 
 const uint8_t DAC_ADDR = 0b10011000;
-I2C_HandleTypeDef hi2c1;
+I2C_HandleTypeDef * hi2c_handler;
 
 void setup_dac();
 
-void init_app(I2C_HandleTypeDef hi2c)
+void init_app(I2C_HandleTypeDef * hi2c)
 {
-	hi2c1 = hi2c;
+	bmPowerOn();
+	bmEnterPairingModeFromOff();
+	hi2c_handler = hi2c;
 	setup_dac();
 }
-
-void tick_app()
-{
-
-}
-
 
 void setup_dac()
 {
@@ -32,4 +28,5 @@ void setup_dac()
 	uint16_t buf = reg_data;
 	buf = buf << 8;
 	buf += reg_adr;
+	while(HAL_I2C_Master_Transmit(hi2c_handler, DAC_ADDR, &buf, 2, 5) != HAL_OK);
 }

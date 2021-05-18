@@ -21,7 +21,7 @@
 TIM_HandleTypeDef *timer_handle;
 
 // screen
-uint8_t screen[256];
+uint8_t screen_io[256];
 uint8_t screen_iterator = 0; // Don't change the screen iterator as the hardware will not reset with it..
 bool clock_status = false;
 bool mono_update = false;
@@ -99,7 +99,7 @@ void interrupt_timer_led(TIM_HandleTypeDef *htim)
 		__HAL_TIM_SET_COUNTER(timer_handle, 0xffff-13440); // second argument is setting the timer 13440 ticks away from overflow
 		if(clock_status){ // line counter iterates at this point
 			HAL_GPIO_WritePin(LED_CLK_GPIO_Port, LED_CLK_Pin, 0);
-			HAL_GPIO_WritePin(LED_DATA_GPIO_Port, LED_DATA_Pin, screen[screen_iterator]);
+			HAL_GPIO_WritePin(LED_DATA_GPIO_Port, LED_DATA_Pin, screen_io[screen_iterator]);
 			screen_iterator++; // because 8bit it will automaticly reset to 0 after 256 counts
 		} else { // shift register reads at this point
 			HAL_GPIO_WritePin(LED_CLK_GPIO_Port, LED_CLK_Pin, 1);
@@ -143,11 +143,11 @@ void colors_to_screen(enum Color colors[70]){
 					break;
 			}
 			// if desired post processing can be done here...
-			screen[i] = value[0]; // assign color to array
-			screen[i+1] = value[1];
+			screen_io[i] = value[0]; // assign color to array
+			screen_io[i+1] = value[1];
 		} else {
-			screen[i] = 0; // outside info just black
-			screen[i+1] = 0;
+			screen_io[i] = 0; // outside info just black
+			screen_io[i+1] = 0;
 		}
 	}
 }

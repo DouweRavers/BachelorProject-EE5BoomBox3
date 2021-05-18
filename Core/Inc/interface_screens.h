@@ -13,6 +13,7 @@
 enum direction{  // button pressed
 	Up, Down, Left, Right, Enter, NoSelection
 };
+
 enum screentype{ // different screen types
 	VolumeScreen=0,	StartScreen=1, MenuScreen=2, SongScreen=3,
 	LedScreen=4

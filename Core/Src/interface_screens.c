@@ -20,7 +20,7 @@
  */
 
 void getScreenOutputVolume(uint32_t frame, char * first, char * second); // volume popup
-struct buttonaction onButtonPressedPopUp(enum direction dir); //
+struct buttonaction onButtonPressedPopUp(enum direction dir);
 
 /***********************
  * 		Menu tabs

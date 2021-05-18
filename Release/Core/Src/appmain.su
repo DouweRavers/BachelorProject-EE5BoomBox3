@@ -1,3 +1,2 @@
+appmain.c:25:6:setup_dac	32	static
 appmain.c:17:6:init_app	8	static
-appmain.c:23:6:tick_app	0	static
-appmain.c:29:6:setup_dac	0	static

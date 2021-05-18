@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "bluetooth_uart.h"
+#include "cmsis_os.h"
 
 void bmEnterPairingModeFromOff(){
 	uint8_t parameter[2] = { 0x00 , 0x50};
@@ -22,7 +23,6 @@ void bmChangeDeviceName(char *name  ){
 void bmPowerOn(){
 	uint8_t parameter [2] = {0x00 , 0x51};
 	sendCommand(0x02 , parameter , 0x03);
-
 	parameter[1] = 0x52 ;
 	sendCommand(0x02 , parameter , 0x03);
 }
@@ -38,11 +38,11 @@ void bmDisconnect(){
 }
 void bmSwitchToNextSong(){
 	uint8_t parameter[2] = { 0x00 ,0x34};
-	sendCommand(0x02 , parameter , 0x35);
+	sendCommand(0x02 , parameter , 0x03);
 }
 
 void bmSwitchToPreviousSong(){
-	uint8_t parameter[2] = { 0x00 , 0x32};
+	uint8_t parameter[2] = { 0x00 , 0x35};
 	sendCommand(0x02 , parameter , 0x03);
 }
 
@@ -61,12 +61,12 @@ void bmPowerOff(){
 
 void sendCommand(uint8_t opCode, uint8_t *parameter, uint8_t length){
 	uint8_t command[ length + 4 ];
-	HAL_GPIO_WritePin (BM_TX_INDICATION_GPIO_Port, BM_TX_INDICATION_Pin,  GPIO_PIN_SET);
+	HAL_GPIO_WritePin (GPIOB, GPIO_PIN_6,  GPIO_PIN_SET);
 	makeCommand( command , opCode , parameter , length);
-	osDelay(3);
+	osDelay(40);
 	HAL_StatusTypeDef status =  HAL_UART_Transmit ( getUartPointerBluetooth(), command, length+4, 100);
-	osDelay(2);
-	HAL_GPIO_WritePin (BM_TX_INDICATION_GPIO_Port, BM_TX_INDICATION_Pin,  GPIO_PIN_RESET);
+	osDelay(30);
+	HAL_GPIO_WritePin (GPIOB, GPIO_PIN_6,  GPIO_PIN_RESET);
 }
 
 int readEvent(){

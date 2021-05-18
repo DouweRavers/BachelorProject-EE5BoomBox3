@@ -28,8 +28,8 @@ bool LED_enabled = false;
 //	volume control
 int volume_delta = 0; // volume wheel went up/down
 const uint8_t LPOT_ADDR = 0b01010100, RPOT_ADDR = 0b01011110; // I2C adresses
-I2C_HandleTypeDef * hi2c1;
-TIM_HandleTypeDef * htim6;
+I2C_HandleTypeDef * i2c_handle;
+TIM_HandleTypeDef * tim_handle;
 
 //	screen control
 bool screen_updated = true; // indicator of when to rewrite screen output
@@ -61,15 +61,13 @@ void configure_potentiometers();
  **************************/
 void init_interface(I2C_HandleTypeDef * hi2c, TIM_HandleTypeDef *htim)
 {
-	hi2c1 = hi2c;
-	htim6 = htim;
+	i2c_handle = hi2c;
+	tim_handle = htim;
 	lcd_init(htim);
-	osDelay(10);
 }
 
 void tick_interface(uint32_t frame)
 {
-	// at 30Hz the uint32 of frame will loop back after 100 years
 	interface_update(frame);
 	volume_update(frame);
 	screen_update(frame);
@@ -96,8 +94,8 @@ void interrupt_adc_interface(ADC_HandleTypeDef *hadc){
 }
 
 void interrupt_timer_interface(TIM_HandleTypeDef *htim){
-	if(htim == htim6){
-		HAL_TIM_Base_Start_IT(htim6);
+	if(htim == tim_handle){
+		HAL_TIM_Base_Start_IT(tim_handle);
 	}
 }
 
@@ -156,7 +154,7 @@ void volume_update(uint32_t frame)
 		volume_delta = 0;
 		set_screen(VolumeScreen);
 	}
-	//configure_potentiometers();
+	configure_potentiometers();
 }
 
 void configure_potentiometers()
@@ -168,16 +166,16 @@ void configure_potentiometers()
 	buf += com_and_adr;
 	uint8_t sound_info[2] = {0b00010000, floor(0xff / 20) * volume_level};
 	// send volume as long as the potentiometers accept
-	for(int i=0;i<10 && HAL_I2C_Master_Transmit(hi2c1, LPOT_ADDR, sound_info, 2, 50) != HAL_OK;i++);
-	for(int i=0;i<10 && HAL_I2C_Master_Transmit(hi2c1, RPOT_ADDR, &buf, 2, 50) != HAL_OK;i++);
+	while(HAL_I2C_Master_Transmit(i2c_handle, LPOT_ADDR, &buf, 2, 5) != HAL_OK);
+	while(HAL_I2C_Master_Transmit(i2c_handle, RPOT_ADDR, sound_info, 2, 5) != HAL_OK);
 	// write to RDAC2 meaning negative side potentiometers
 	com_and_adr = 0b00010001; // 0 = command and address of RDAC register, 1 = to write value of RDAC register
 	buf = data;
 	buf = buf << 8;
 	buf += com_and_adr;
 	// configure the positive side potentiometers
-	for(int i=0;i<10 && HAL_I2C_Master_Transmit(hi2c1, LPOT_ADDR, &buf, 2, 50) != HAL_OK;i++);
-	for(int i=0;i<10 && HAL_I2C_Master_Transmit(hi2c1, RPOT_ADDR, &buf, 2, 50) != HAL_OK;i++);
+	while(HAL_I2C_Master_Transmit(i2c_handle, LPOT_ADDR, &buf, 2, 5) != HAL_OK);
+	while(HAL_I2C_Master_Transmit(i2c_handle, RPOT_ADDR, &buf, 2, 5) != HAL_OK);
 }
 
 // Button driver
