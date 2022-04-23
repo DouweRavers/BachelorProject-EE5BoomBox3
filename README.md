@@ -7,4 +7,5 @@ The project was around 50% hardware development and 50% software development.
 Using a stm32 and freertos we developed different threads that handled UI, Bluetooth and audio stream. 
 
 Here a video of one of the last updates send to our professor.
-![caption](https://photos.app.goo.gl/rSZLSicWjxdv8FSj6) 
+
+[![Demo video](https://higherjourneys.com/thevoice/playbutton/)](https://photos.app.goo.gl/CTbYrV9yQRFVH9VU7)
